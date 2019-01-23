@@ -10,7 +10,9 @@ object WordCountTest {
 
   def main(args: Array[String]): Unit = {
     //创建spark执行入口
-    val conf = new SparkConf()
+    //    val conf = new SparkConf()
+    //指定setMaster为local本地执行，可以debug
+    val conf = new SparkConf().setAppName("scala-wordcount").setMaster("local[4]")
     val sc = new SparkContext(conf)
     //指定以后从哪里读取数据集，创建RDD
     //    sc.textFile(args(0)).flatMap(_.split(" "))
