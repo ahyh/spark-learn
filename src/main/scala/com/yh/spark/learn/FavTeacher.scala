@@ -3,6 +3,11 @@ package com.yh.spark.learn
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
+/**
+  * 求最受欢迎的老师
+  *
+  * @author yanhuan
+  */
 object FavTeacher {
 
   def main(args: Array[String]): Unit = {
