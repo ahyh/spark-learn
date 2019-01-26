@@ -1,5 +1,7 @@
 package com.yh.spark.learn.ip
 
+import java.sql.{Connection, DriverManager, PreparedStatement}
+
 import scala.io.{BufferedSource, Source}
 
 /**
@@ -59,6 +61,27 @@ object IPUtils {
       ipNum = fragment(i).toLong | ipNum << 8L
     }
     ipNum
+  }
+
+  def data2MySQL(it: Iterator[(String, Int)]): Unit = {
+    //一个迭代器代表一个分区，分区中有多条数据
+    //先获得一个JDBC连接
+    val conn: Connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/yanhuan?characterEncoding=UTF-8", "root", "123456")
+    //将数据通过Connection写入到数据库
+    val pstm: PreparedStatement = conn.prepareStatement("INSERT INTO access_log VALUES (?, ?)")
+    //将分区中的数据一条一条写入到MySQL中
+    it.foreach(tp => {
+      pstm.setString(1, tp._1)
+      pstm.setInt(2, tp._2)
+      pstm.executeUpdate()
+    })
+    //将分区中的数据全部写完之后，在关闭连接
+    if(pstm != null) {
+      pstm.close()
+    }
+    if (conn != null) {
+      conn.close()
+    }
   }
 
 }

@@ -1,6 +1,7 @@
 package com.yh.spark.learn.ip
 
-import java.sql.{Connection, DriverManager}
+import java.sql
+import java.sql.{Connection, DriverManager, PreparedStatement}
 
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
@@ -14,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object IPLocations2 {
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("ip-locations1").setMaster("local[4]")
+    val conf = new SparkConf().setAppName("ip-locations2").setMaster("local[4]")
     val sc = new SparkContext(conf)
 
     //在Driver端获取到全部的ip规则数据（全部的ip规则数据就在某一台机器上）
@@ -25,7 +26,7 @@ object IPLocations2 {
     val ipRulesRDD: RDD[(Long, Long, String)] = ipRules.map(line => {
       val fields = line.split("[|]")
       val startNum = fields(2).toLong
-      val endNum = fields(4).toLong
+      val endNum = fields(3).toLong
       val province = fields(6)
       (startNum, endNum, province)
     })
@@ -76,18 +77,7 @@ object IPLocations2 {
     //    })
 
     //一个分区拿到一个数据库连接进行操作
-    reduced.foreachPartition(iter => {
-      val conn: Connection = DriverManager.getConnection("jdbc://localhost:3306/yanhuan?charatorEncoding=UTF-8", "root", "123456")
-      var ps = conn.prepareStatement("...")
-      //将分区中数据逐条拿出
-      iter.map(tp => {
-        ps.setString(1, tp._1)
-        ps.setInt(2, tp._2)
-        ps.executeUpdate()
-      })
-      ps.close()
-      conn.close()
-    })
+    reduced.foreachPartition(it => IPUtils.data2MySQL(it))
 
     sc.stop()
   }
